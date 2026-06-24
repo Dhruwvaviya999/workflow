@@ -10,24 +10,17 @@ from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
 )
-from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
-    TokenRefreshView,
-    TokenVerifyView,
-)
 
 # Everything the API exposes lives under this prefix.
 api_v1_patterns = [
     # Health check + future core endpoints.
     path("", include("apps.core.urls")),
 
-    # JWT auth foundation (login / refresh / verify).
-    path("auth/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
-    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    path("auth/token/verify/", TokenVerifyView.as_view(), name="token_verify"),
+    # Auth: register / login / logout / refresh / verify / me.
+    path("auth/", include("apps.accounts.urls")),
 
-    # account-specific endpoints will be added in Phase 2.
-    path("", include("apps.accounts.urls")),
+    # Workspaces + memberships.
+    path("workspaces/", include("apps.workspaces.urls")),
 
     # OpenAPI schema + Swagger docs.
     path("schema/", SpectacularAPIView.as_view(), name="schema"),

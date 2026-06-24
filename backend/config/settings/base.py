@@ -44,6 +44,7 @@ DJANGO_APPS = [
 THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "corsheaders",
     "django_filters",
     "drf_spectacular",
@@ -53,6 +54,7 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "apps.common",
     "apps.accounts",
+    "apps.workspaces",
     "apps.core",
 ]
 
@@ -154,6 +156,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "apps.common.pagination.DefaultPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    # Consistent, predictable error envelope across the whole API.
+    "EXCEPTION_HANDLER": "apps.common.exceptions.api_exception_handler",
 }
 
 # ------------------------------------------------------------------
@@ -167,7 +171,8 @@ SIMPLE_JWT = {
         days=env.int("JWT_REFRESH_TOKEN_LIFETIME_DAYS", default=7)
     ),
     "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": False,
+    # Rotated/blacklisted refresh tokens enable a real server-side logout.
+    "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",

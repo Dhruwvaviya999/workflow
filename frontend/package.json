@@ -2,7 +2,13 @@
   "name": "ai-workflow-frontend",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.30.2",
+  "engines": {
+    "pnpm": ">=10",
+    "node": ">=20"
+  },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -10,7 +16,7 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""
   },
   "dependencies": {
-    "next": "15.1.6",
+    "next": "15.5.19",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "@radix-ui/react-slot": "^1.1.1",
@@ -34,7 +40,7 @@
     "postcss": "^8.5.0",
     "tw-animate-css": "^1.2.0",
     "eslint": "^9.18.0",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "15.5.19",
     "@eslint/eslintrc": "^3.2.0",
     "prettier": "^3.4.0"
   }

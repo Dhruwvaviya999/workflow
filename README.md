@@ -39,11 +39,14 @@ python manage.py runserver
 
 ### Frontend
 
+This project uses **pnpm** (enforced — `npm`/`yarn` are blocked). Install pnpm
+with `corepack enable pnpm` or `npm i -g pnpm` if you don't have it.
+
 ```bash
 cd frontend
-npm install
+pnpm install
 cp .env.example .env.local
-npm run dev
+pnpm dev
 ```
 
 - App: http://localhost:3000

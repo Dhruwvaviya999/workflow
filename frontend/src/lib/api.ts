@@ -1,32 +1,76 @@
 /**
  * Central HTTP client.
  *
- * A single axios instance everything goes through, so base URL, headers and
- * (in Phase 2) auth-token injection / refresh live in one place.
+ * One axios instance everything goes through. Responsibilities:
+ *  - inject the JWT access token on every request
+ *  - transparently refresh the access token once on a 401, then retry
+ *  - clear tokens and bubble the error if refresh fails
  */
-import axios, { type AxiosInstance } from "axios";
+import axios, {
+  AxiosError,
+  type AxiosInstance,
+  type InternalAxiosRequestConfig,
+} from "axios";
 
-import { API_BASE_URL, STORAGE_KEYS } from "@/constants";
+import { API_BASE_URL } from "@/constants";
+import { authStorage } from "@/lib/auth-storage";
 
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
-  withCredentials: false,
 });
 
-/**
- * Attach the JWT access token to every request when present.
- * Token storage/refresh is wired up properly in Phase 2; this is the hook.
- */
+// --- Request: attach the access token -------------------------------
 api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = window.localStorage.getItem(STORAGE_KEYS.accessToken);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  const token = authStorage.getAccess();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// --- Response: refresh once on 401 ----------------------------------
+type RetriableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+// Optional hook the auth layer sets so a failed refresh can reset app state.
+let onAuthFailure: (() => void) | null = null;
+export function setOnAuthFailure(handler: () => void) {
+  onAuthFailure = handler;
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const original = error.config as RetriableConfig | undefined;
+    const refresh = authStorage.getRefresh();
+
+    const isAuthEndpoint = original?.url?.includes("/auth/");
+    if (
+      error.response?.status === 401 &&
+      original &&
+      !original._retry &&
+      refresh &&
+      !isAuthEndpoint
+    ) {
+      original._retry = true;
+      try {
+        // Bare axios call so we don't recurse through this interceptor.
+        const { data } = await axios.post<{ access: string }>(
+          `${API_BASE_URL}/auth/token/refresh/`,
+          { refresh },
+        );
+        authStorage.setAccess(data.access);
+        original.headers.Authorization = `Bearer ${data.access}`;
+        return api(original);
+      } catch (refreshError) {
+        authStorage.clear();
+        onAuthFailure?.();
+        return Promise.reject(refreshError);
+      }
+    }
+    return Promise.reject(error);
+  },
+);
 
 /** Thin typed helpers so callers don't repeat `.then(r => r.data)`. */
 export const http = {
