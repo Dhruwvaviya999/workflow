@@ -1,0 +1,11 @@
+"""Project routes (mounted under /api/v1/projects/)."""
+from rest_framework.routers import DefaultRouter
+
+from .views import ProjectViewSet
+
+app_name = "projects"
+
+router = DefaultRouter()
+router.register("", ProjectViewSet, basename="project")
+
+urlpatterns = router.urls

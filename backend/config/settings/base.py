@@ -55,6 +55,10 @@ LOCAL_APPS = [
     "apps.common",
     "apps.accounts",
     "apps.workspaces",
+    "apps.projects",
+    "apps.tasks",
+    "apps.documents",
+    "apps.dashboard",
     "apps.core",
 ]
 
@@ -135,6 +139,20 @@ STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+# File storage backend. Local filesystem for now; to move to S3/Cloudinary
+# later, swap "default" for the relevant storage class (e.g. storages.backends
+# .s3.S3Storage) — no model/view changes required.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+    },
+}
+
+# Cap uploads at 25 MB in memory before streaming to disk.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

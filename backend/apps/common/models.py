@@ -36,3 +36,31 @@ class BaseModel(UUIDModel, TimeStampedModel):
     class Meta:
         abstract = True
         ordering = ["-created_at"]
+
+
+class AuthoredModel(BaseModel):
+    """
+    BaseModel + audit columns tracking who created/last-updated the row.
+
+    The viewsets (via AuditMixin) populate these automatically from the
+    request user, so feature code never sets them by hand.
+    """
+
+    created_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+    updated_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="+",
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ["-created_at"]
